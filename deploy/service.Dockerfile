@@ -1,11 +1,10 @@
 FROM node:12.16.1-alpine as builder
+
 COPY package.json ./
 COPY package-lock.json ./
 COPY tsconfig.build.json ./
 COPY tsconfig.json ./
 COPY src ./src
-
-RUN apk --no-cache add g++ gcc libgcc make python
 
 RUN npm ci
 RUN npm run build

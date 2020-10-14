@@ -1,0 +1,80 @@
+version: "3.4"
+
+services:
+
+  auth-service:
+    image: local/auth-service
+    build:
+      context: ..
+      dockerfile: deploy/service.Dockerfile
+    restart: always
+    environment:
+      LOG_LEVEL: ALL
+      HOST: auth-service
+      PORT: 3000
+      POSTGRES_DB: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_HOST: auth-service-db
+      POSTGRES_PORT: 5432
+      JWT_SECRET: 41aad177-6dc7-4842-976d-63d8d8e54fdb
+    depends_on:
+      - auth-service-db
+    networks:
+      - network
+    ports:
+      - 3000:3000
+
+  auth-service-db:
+    image: postgres:11
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - 5432:5432
+    volumes:
+      - auth-service-db:/postgres/data:rw
+    networks:
+      - network
+
+  auth-tests:
+    image: local/auth-tests
+    build:
+      context: ..
+      dockerfile: deploy/tests.Dockerfile
+    environment:
+      LOG_LEVEL: NONE
+      HOST: auth-service
+      PORT: 3000
+      POSTGRES_DB: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_HOST: auth-tests-db
+      POSTGRES_PORT: 5432
+      JWT_SECRET: 41aad177-6dc7-4842-976d-63d8d8e54fdb
+    depends_on:
+      - auth-tests-db
+    networks:
+      - network
+
+  auth-tests-db:
+    image: postgres:11
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - 5433:5432
+    volumes:
+      - auth-service-db:/postgres/data:rw
+    networks:
+      - network
+
+volumes:
+  auth-service-db:
+  auth-tests-db:
+
+networks:
+  network:
+    driver: bridge
